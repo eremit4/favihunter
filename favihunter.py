@@ -6,9 +6,9 @@ from fake_useragent import UserAgent
 from favicon import get as get_favicon
 from validators import url as url_validation
 from contextlib import closing
-from os.path import isdir
-from os import mkdir
-from mmh3 import hash as mm3_hash
+from os.path import isdir, isfile
+from os import mkdir, listdir, remove
+from mmh3 import hash as mmh3_calc
 from hashlib import md5 as md5_calc
 from base64 import b64encode, encodebytes
 from codecs import encode as codec_encode
@@ -37,9 +37,9 @@ class CustomHelpFormatter(HelpFormatter):
 
 def make_url_tiny(url: str) -> str:
     """
-    Converts a long URL into a tiny url
+    Converts a long url into a tiny url
     :param url: url to be transformed
-    :return: Tiny URL
+    :return: Shortened URL
     """
     request_url = f"http://tinyurl.com/api-create.php?{urlencode({'url':url})}"
     with closing(urlopen(request_url)) as response:
@@ -59,25 +59,31 @@ def get_favicon_from_url(url: str) -> dict:
         "Connection": "keep-alive",
         "Upgrade-Insecure-Requests": "1"
     }
-    domain = extract(url)
-    print(f"{Fore.BLUE}[{Fore.RED}>{Fore.BLUE}] {Fore.WHITE}Collecting the favicon from {Style.BRIGHT}{Fore.RED}{url}{Style.NORMAL}")
-    favicon = get_favicon(url=url, headers=header, timeout=2)
-    print(f"{Fore.BLUE}[{Fore.RED}>{Fore.BLUE}] {Fore.WHITE}Extracting hashes from favicon {Style.BRIGHT}{Fore.RED}{favicon[0].url}{Style.NORMAL}")
-    response = get(url=favicon[0].url, headers=header, stream=True)
-    favicon_data = encodebytes(response.content)
-    if response.status_code == 200:
-        if not isdir("./tmp"):
-            mkdir(path="./tmp")
-        with open(file=f"./tmp/{domain.domain}.{favicon[0].format}", mode="wb") as fp:
-            for piece in response.iter_content(1024):
-                fp.write(piece)
-        return {
-            "url": favicon[0].url,
-            "mm3": mm3_hash(favicon_data),
-            "md5": md5_calc(favicon_data).hexdigest()
-        }
-    else:
-        print(f"{Fore.BLUE}[{Fore.RED}!{Fore.BLUE}] {Fore.WHITE}Unable to save favicon from url {Style.BRIGHT}{Fore.RED}{favicon[0]}{Style.NORMAL}{Fore.WHITE}:\n{response.text}")
+    favicon, domain = str, extract(url)
+    try:
+        print(f"{Fore.BLUE}[{Fore.RED}>{Fore.BLUE}] {Fore.WHITE}Collecting the favicon from {Style.BRIGHT}{Fore.RED}{url}{Style.NORMAL}")
+        for data in get_favicon(url=url, headers=header, timeout=2):
+            if ".ico" in data.url:
+                favicon = data
+        print(f"{Fore.BLUE}[{Fore.RED}>{Fore.BLUE}] {Fore.WHITE}Extracting hashes from favicon {Style.BRIGHT}{Fore.RED}{favicon.url}{Style.NORMAL}")
+        response = get(url=favicon.url, headers=header, stream=True)
+        favicon_data = encodebytes(response.content)
+        if response.status_code == 200:
+            if not isdir("./tmp"):
+                mkdir(path="./tmp")
+            favicon_path = f"./tmp/{domain.domain}.{favicon.format}"
+            with open(file=favicon_path, mode="wb") as fp:
+                for piece in response.iter_content(1024):
+                    fp.write(piece)
+            with open(file=favicon_path, mode="rb") as fp:
+                new_favicon_md5 = md5_calc()
+                new_favicon_md5.update(fp.read())
+                return {"url": favicon.url, "mmh3": mmh3_calc(favicon_data), "md5": new_favicon_md5.hexdigest()}
+        else:
+            print(f"{Fore.BLUE}[{Fore.RED}!{Fore.BLUE}] {Fore.WHITE}Unable to save favicon from url {Style.BRIGHT}{Fore.RED}{favicon.url}{Style.NORMAL}{Fore.WHITE}: {response.text}")
+            return {}
+    except Exception:
+        print(f"{Fore.BLUE}[{Fore.RED}!{Fore.BLUE}] {Fore.WHITE}An error occurred: {repr(print_traceback())}")
         return {}
 
 
@@ -85,7 +91,7 @@ def print_hashes_table(favicon_hashes_dict=None, favicons_hashes_list=None) -> N
     """
     Shows the results table on the terminal
     :param favicon_hashes_dict: a dict with the hashes of one favicon
-    :param favicons_hashes_list: a list storing dictionaries with the hashes of more than one favicons
+    :param favicons_hashes_list: a list storing dictionaries with the hashes of more than one favicon
     :return: None
     """
     def add_row_on_table(engine_dict: dict, hash_dict: dict) -> None:
@@ -96,43 +102,23 @@ def print_hashes_table(favicon_hashes_dict=None, favicons_hashes_list=None) -> N
         :return: None
         """
         if engine_dict["name"] == "FOFA":
-            query_encoded = b64encode(s=str(engine_dict["query"].format(hash_dict["mm3"])).encode())
-            url = engine_dict["url"].format(query_encoded.decode())
-            sector_table.add_row(
-                [
-                    f"{Fore.RED}{engine_dict['name']}{Fore.BLUE}",
-                    f"{Fore.WHITE}{engine_dict['query'].format(hash_dict['mm3'])}{Fore.BLUE}",
-                    f"{Fore.WHITE}{make_url_tiny(url=url)}{Fore.BLUE}"
-                ]
-            )
+            query_encoded = b64encode(s=str(engine_dict["query"].format(hash_dict["mmh3"])).encode())
+            sector_table.add_row([f"{Fore.RED}{engine_dict['name']}{Fore.BLUE}",
+                                  f"{Fore.WHITE}{engine_dict['query'].format(hash_dict['mmh3'])}{Fore.BLUE}",
+                                  f"{Fore.WHITE}{make_url_tiny(url=engine_dict['url'].format(query_encoded.decode()))}{Fore.BLUE}"])
         if engine_dict["name"] == "Censys":
-            url = engine_dict["url"].format(hash_dict["md5"])
-            sector_table.add_row(
-                [
-                    f"{Fore.RED}{engine_dict['name']}{Fore.BLUE}",
-                    f"{Fore.WHITE}{engine_dict['query'].format(hash_dict['md5'])}{Fore.BLUE}",
-                    f"{Fore.WHITE}{make_url_tiny(url=url)}{Fore.BLUE}"
-                ]
-            )
+            sector_table.add_row([f"{Fore.RED}{engine_dict['name']}{Fore.BLUE}",
+                                  f"{Fore.WHITE}{engine_dict['query'].format(hash_dict['md5'])}{Fore.BLUE}",
+                                  f"{Fore.WHITE}{make_url_tiny(url=engine_dict['url'].format(hash_dict['md5']))}{Fore.BLUE}"])
         if engine_dict["name"] == "Criminal IP":
-            hex_value_formatted = str(hex(hash_dict["mm3"])).split("x")[1]
-            url = engine_dict["url"].format(hex_value_formatted)
-            sector_table.add_row(
-                [
-                    f"{Fore.RED}{engine_dict['name']}{Fore.BLUE}",
-                    f"{Fore.WHITE}{engine_dict['query'].format(hex_value_formatted)}{Fore.BLUE}",
-                    f"{Fore.WHITE}{make_url_tiny(url=url)}{Fore.BLUE}"
-                ]
-            )
+            hex_value_formatted = str(hex(hash_dict["mmh3"])).split("x")[1]
+            sector_table.add_row([f"{Fore.RED}{engine_dict['name']}{Fore.BLUE}",
+                                  f"{Fore.WHITE}{engine_dict['query'].format(hex_value_formatted)}{Fore.BLUE}",
+                                  f"{Fore.WHITE}{make_url_tiny(url=engine_dict['url'].format(hex_value_formatted))}{Fore.BLUE}"])
         if engine_dict["name"] in ["Shodan", "Zoomeye"]:
-            url = engine_dict["url"].format(hash_dict["mm3"])
-            sector_table.add_row(
-                [
-                    f"{Fore.RED}{engine_dict['name']}{Fore.BLUE}",
-                    f"{Fore.WHITE}{engine_dict['query'].format(hash_dict['mm3'])}{Fore.BLUE}",
-                    f"{Fore.WHITE}{make_url_tiny(url=url)}{Fore.BLUE}"
-                ]
-            )
+            sector_table.add_row([f"{Fore.RED}{engine_dict['name']}{Fore.BLUE}",
+                                  f"{Fore.WHITE}{engine_dict['query'].format(hash_dict['mmh3'])}{Fore.BLUE}",
+                                  f"{Fore.WHITE}{make_url_tiny(url=engine_dict['url'].format(hash_dict['mmh3']))}{Fore.BLUE}"])
 
     sector_table = PrettyTable()
     sector_table.field_names = ["Engine", "Query", "Query Url"]
@@ -146,7 +132,10 @@ def print_hashes_table(favicon_hashes_dict=None, favicons_hashes_list=None) -> N
     if favicon_hashes_dict is not None:
         for engine in engines.values():
             add_row_on_table(engine_dict=engine, hash_dict=favicon_hashes_dict)
-        print(f"{Fore.BLUE}[{Fore.RED}>{Fore.BLUE}] {Fore.WHITE}These are the hashes and queries for the favicon {Style.BRIGHT}{Fore.RED}{favicon_hashes_dict['url']}{Style.NORMAL}")
+        if favicon_hashes_dict.get("url"):
+            print(f"{Fore.BLUE}[{Fore.RED}>{Fore.BLUE}] {Fore.WHITE}These are the hashes and queries for the favicon {Style.BRIGHT}{Fore.RED}{favicon_hashes_dict['url']}{Style.NORMAL}")
+        else:
+            print(f"{Fore.BLUE}[{Fore.RED}>{Fore.BLUE}] {Fore.WHITE}These are the hashes and queries for the favicon {Style.BRIGHT}{Fore.RED}{favicon_hashes_dict['file']}{Style.NORMAL}")
         print(f"{Style.BRIGHT}{Fore.BLUE}{sector_table.get_string(fields=['Engine', 'Query', 'Query Url'])}")
         return
 
@@ -165,15 +154,59 @@ def main(args_: ArgumentParser) -> None:
     :return: None
     """
     parser = args_.parse_args()
-    if parser.url:
+    if parser.remove_favicons:
+        print(f"{Fore.BLUE}[{Fore.RED}>{Fore.BLUE}] {Fore.WHITE}Preparing to clean the local favicon directory")
+        if len(listdir(path="./tmp")) == 0:
+            print(f"{Fore.BLUE}[{Fore.RED}>{Fore.BLUE}] {Fore.WHITE}The directory is empty")
+        for favicon_item in listdir(path="./tmp"):
+            remove(path=f"./tmp/{favicon_item}")
+            print(f"\t{Fore.BLUE}[{Fore.RED}-{Fore.BLUE}] {Style.BRIGHT}{Fore.RED}{favicon_item}{Style.NORMAL}{Fore.WHITE} removed")
+
+    elif parser.url:
         if url_validation(parser.url):
-            print_hashes_table(favicon_hashes_dict=get_favicon_from_url(url=parser.url))
+            favicon_dict = get_favicon_from_url(url=parser.url)
+            if favicon_dict.get("mmh3"):
+                print_hashes_table(favicon_hashes_dict=favicon_dict)
         else:
             print(f"{Fore.BLUE}[{Fore.RED}!{Fore.BLUE}] {Fore.WHITE}Url {Style.BRIGHT}{Fore.RED}{parser.url}{Style.NORMAL}{Fore.WHITE} is invalid")
+
     elif parser.urls_file:
-        pass
+        if isfile(path=parser.urls_file):
+            with open(file=parser.urls_file, mode="r+") as urls:
+                for url in urls.readlines():
+                    url = url.strip()
+                    if url_validation(url):
+                        favicon_dict = get_favicon_from_url(url=url)
+                        if favicon_dict.get("mmh3"):
+                            print_hashes_table(favicon_hashes_dict=favicon_dict)
+                    else:
+                        print(f"{Fore.BLUE}[{Fore.RED}!{Fore.BLUE}] {Fore.WHITE}Url {Style.BRIGHT}{Fore.RED}{url}{Style.NORMAL}{Fore.WHITE} is invalid")
+        else:
+            print(f"{Fore.BLUE}[{Fore.RED}!{Fore.BLUE}] {Fore.WHITE}The file path {Style.BRIGHT}{Fore.RED}{parser.urls_file}{Style.NORMAL}{Fore.WHITE} is invalid")
+
     elif parser.favicon:
-        pass
+        if isfile(path=parser.favicon):
+            print(f"{Fore.BLUE}[{Fore.RED}>{Fore.BLUE}] {Fore.WHITE}Extracting hashes from favicon {Style.BRIGHT}{Fore.RED}{parser.favicon}{Style.NORMAL}")
+            """
+            we need to open the file 2 times to calculate correctly these different hashes.
+            otherwise, we'll have additions to the final value 
+            """
+            with open(file=parser.favicon, mode="rb") as fp:
+                new_favicon_md5 = md5_calc()
+                new_favicon_md5.update(fp.read())
+                md5_value = new_favicon_md5.hexdigest()
+            with open(file=parser.favicon, mode="rb") as fp:
+                encoded_data = codec_encode(fp.read(), encoding="base64")
+                mmh3_value = mmh3_calc(encoded_data)
+            favicon_hashes = {
+                "file": parser.favicon,
+                "mmh3": mmh3_value,
+                "md5": md5_value
+            }
+            print_hashes_table(favicon_hashes_dict=favicon_hashes)
+        else:
+            print(f"{Fore.BLUE}[{Fore.RED}!{Fore.BLUE}] {Fore.WHITE}The file path {Style.BRIGHT}{Fore.RED}{parser.urls_file}{Style.NORMAL}{Fore.WHITE} is invalid")
+
     else:
         args_.print_help()
 
@@ -182,9 +215,10 @@ if __name__ == '__main__':
     arg_style = lambda prog: CustomHelpFormatter(prog)
     args = ArgumentParser(description="", add_help=False, formatter_class=arg_style)
     group_required = args.add_argument_group(title="Options")
-    group_required.add_argument("-u", "--url", metavar="<address>", type=str, required=False, help="Receives a url, collects the favicon, and returns the hashes.")
-    group_required.add_argument("-uf", "--urls-file", metavar="<file path>", type=str, required=False, help="Receives a file storing a lits of urls, collects the favicons, and returns the hashes.")
-    group_required.add_argument("-f", "--favicon", metavar="<favicon path>", type=str, required=False, help="Receives the favicon file path and returns the hashes.")
+    group_required.add_argument("-u", "--url", metavar="<address>", type=str, required=False, help="Receives a url, collects the favicon, and returns the hashes, custom queries, and query URLs into a table.")
+    group_required.add_argument("-uf", "--urls-file", metavar="<file path>", type=str, required=False, help="Receives a file path storing URLs, collects the favicon, and returns the hashes, custom queries, and query URLs into a table.")
+    group_required.add_argument("-f", "--favicon", metavar="<favicon path>", type=str, required=False, help="Receives the favicon file path and returns the hashes, custom queries, and query URLs into a table.")
+    group_required.add_argument("-r", "--remove-favicons", action="store_true", required=False, help="Clean the local favicon directory.")
     group_required = args.add_argument_group(title="Help")
     group_required.add_argument("-h", "--help", action="help", help="Show this help screen.")
 
@@ -207,4 +241,4 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print(f"{Fore.BLUE}[{Fore.RED}!{Fore.BLUE}] {Fore.WHITE}Program manually stopped")
     except Exception:
-        print(print_traceback())
+        print(f"{Fore.BLUE}[{Fore.RED}!{Fore.BLUE}] {Fore.WHITE}An error occurred and forced the program to stop: {repr(print_traceback())}")
