@@ -232,8 +232,8 @@ if __name__ == '__main__':
          |  |   / __ \\   /|  |   Y  \  |  /   |  \  | \  ___/|  | \/
          |__|  (____  /\_/ |__|___|  /____/|___|  /__|  \___  >__|   
                     \/             \/           \/          \/         
-                        {}[{}>{}] {}Hunting assets through favicon hashes
-                        {}[{}>{}] {}By eremit4 and johnk3r                                                                                                        
+         {}[{}>{}] {}Hunting assets on the internet through favicon hashes
+         {}[{}>{}] {}By eremit4 and johnk3r                                                                                                        
         {}""".format(Style.BRIGHT, Fore.BLUE, Style.NORMAL, Fore.RED, Fore.BLUE, Fore.WHITE,
                      Fore.BLUE, Fore.RED, Fore.BLUE, Fore.WHITE, Fore.RESET))
     try:
