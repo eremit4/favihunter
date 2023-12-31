@@ -1,0 +1,8 @@
+mmh3~=4.0.1
+favicon~=0.7.0
+colorama~=0.4.6
+requests~=2.31.0
+tldextract~=5.1.1
+validators~=0.22.0
+prettytable~=3.9.0
+fake-useragent~=1.4.0
