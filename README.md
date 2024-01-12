@@ -1,7 +1,7 @@
 # FaviHunter
 > Favicons are small icons in modern web applications that could be very useful for us in our day-to-day hunting activities, especially when we combine these icons with modern search engines to find assets on the internet. 
 
-> This project aims to help a security professional find assets on the internet using favicon hashes on search engines such as [FOFA](https://en.fofa.info/), [Shodan](https://www.shodan.io/), [Censys](https://search.censys.io/), [Zoomeye](https://www.zoomeye.org/), and [Criminal IP](https://www.criminalip.io/).
+> This project aims to help a security professional find assets on the internet using favicon hashes on search engines such as [FOFA](https://en.fofa.info/), [Shodan](https://www.shodan.io/), [Censys](https://search.censys.io/), [Zoomeye](https://www.zoomeye.org/), [Criminal IP](https://www.criminalip.io/), and [ODIN](https://getodin.com/).
 The program returns a table with the custom queries of each search engine and their shortened URL with the query applied.
 
 ## 🔧 Setup
@@ -46,4 +46,4 @@ Cleaning the favicon local directory:
 python favihunter.py --remove-favicons
 ```
 
-![](./logo/favihunter_ex.png)
+![](./logo/favihunter.gif)

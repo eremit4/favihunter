@@ -59,12 +59,19 @@ def get_favicon_from_url(url: str) -> dict:
         "Connection": "keep-alive",
         "Upgrade-Insecure-Requests": "1"
     }
-    favicon, domain = str, extract(url)
+    possible_favicon, favicon, domain = dict(), str(), extract(url)
     try:
         print(f"{Fore.BLUE}[{Fore.RED}>{Fore.BLUE}] {Fore.WHITE}Collecting the favicon from {Style.BRIGHT}{Fore.RED}{url}{Style.NORMAL}")
-        for data in get_favicon(url=url, headers=header, timeout=2):
+        possible_favicons = get_favicon(url=url, headers=header, timeout=2)
+        for data in possible_favicons:
             if ".ico" in data.url:
-                favicon = data
+                possible_favicon["ico"] = data
+            if ".png" in data.url:
+                possible_favicon["png"] = data
+        if possible_favicon.get("ico"):
+            favicon = possible_favicon.get("ico")
+        else:
+            favicon = possible_favicon.get("png")
         print(f"{Fore.BLUE}[{Fore.RED}>{Fore.BLUE}] {Fore.WHITE}Extracting hashes from favicon {Style.BRIGHT}{Fore.RED}{favicon.url}{Style.NORMAL}")
         response = get(url=favicon.url, headers=header, stream=True)
         favicon_data = encodebytes(response.content)
@@ -87,7 +94,7 @@ def get_favicon_from_url(url: str) -> dict:
         return {}
 
 
-def print_hashes_table(favicon_hashes_dict=None, favicons_hashes_list=None) -> None:
+def print_hashes_table(favicon_hashes_dict=dict, favicons_hashes_list=dict) -> None:
     """
     Shows the results table on the terminal
     :param favicon_hashes_dict: a dict with the hashes of one favicon
@@ -115,7 +122,7 @@ def print_hashes_table(favicon_hashes_dict=None, favicons_hashes_list=None) -> N
             sector_table.add_row([f"{Fore.RED}{engine_dict['name']}{Fore.BLUE}",
                                   f"{Fore.WHITE}{engine_dict['query'].format(hex_value_formatted)}{Fore.BLUE}",
                                   f"{Fore.WHITE}{make_url_tiny(url=engine_dict['url'].format(hex_value_formatted))}{Fore.BLUE}"])
-        if engine_dict["name"] in ["Shodan", "Zoomeye"]:
+        if engine_dict["name"] in ["Shodan", "Zoomeye", "ODIN"]:
             sector_table.add_row([f"{Fore.RED}{engine_dict['name']}{Fore.BLUE}",
                                   f"{Fore.WHITE}{engine_dict['query'].format(hash_dict['mmh3'])}{Fore.BLUE}",
                                   f"{Fore.WHITE}{make_url_tiny(url=engine_dict['url'].format(hash_dict['mmh3']))}{Fore.BLUE}"])
@@ -124,12 +131,14 @@ def print_hashes_table(favicon_hashes_dict=None, favicons_hashes_list=None) -> N
     sector_table.field_names = ["Engine", "Query", "Query Url"]
     engines = {
         "fofa": {"name": "FOFA", "query": 'icon_hash="{}"', "url": "https://en.fofa.info/result?qbase64={}"},
-        "shodan": {"name": "Shodan", "query": 'http.favicon.hash:"{}"', "url": "https://www.shodan.io/search?query=http.favicon.hash%3A%22{}%22"},
         "zoomeye": {"name": "Zoomeye", "query": 'iconhash:"{}"', "url": "https://www.zoomeye.org/searchResult?q=iconhash%3A%22{}%22"},
-        "censys": {"name": "Censys", "query": 'services.http.response.favicons.md5_hash="{}"', "url": 'https://search.censys.io/search?resource=hosts&q=services.http.response.favicons.md5_hash="{}"'},
-        "criminalip": {"name": "Criminal IP", "query": "favicon: {}", "url": "https://www.criminalip.io/asset/search?query=favicon%3A+{}"}
+        "shodan": {"name": "Shodan", "query": 'http.favicon.hash:"{}"', "url": "https://www.shodan.io/search?query=http.favicon.hash%3A%22{}%22"},
+        "odin": {"name": "ODIN", "query": "services.modules.http.favicon.murmur_hash:{}", "url": "https://getodin.com/search/hosts/services.modules.http.favicon.murmur_hash:{}"},
+        "criminalip": {"name": "Criminal IP", "query": "favicon: {}", "url": "https://www.criminalip.io/asset/search?query=favicon%3A+{}"},
+        "censys": {"name": "Censys", "query": 'services.http.response.favicons.md5_hash="{}"', "url": 'https://search.censys.io/search?resource=hosts&q=services.http.response.favicons.md5_hash="{}"'}
+
     }
-    if favicon_hashes_dict is not None:
+    if favicon_hashes_dict:
         for engine in engines.values():
             add_row_on_table(engine_dict=engine, hash_dict=favicon_hashes_dict)
         if favicon_hashes_dict.get("url"):
@@ -139,7 +148,7 @@ def print_hashes_table(favicon_hashes_dict=None, favicons_hashes_list=None) -> N
         print(f"{Style.BRIGHT}{Fore.BLUE}{sector_table.get_string(fields=['Engine', 'Query', 'Query Url'])}")
         return
 
-    if favicons_hashes_list is not None:
+    if favicons_hashes_list:
         for hashes_dict in favicons_hashes_list:
             for engine in engines.values():
                 add_row_on_table(engine_dict=engine, hash_dict=hashes_dict)
@@ -232,7 +241,7 @@ if __name__ == '__main__':
          |  |   / __ \\   /|  |   Y  \  |  /   |  \  | \  ___/|  | \/
          |__|  (____  /\_/ |__|___|  /____/|___|  /__|  \___  >__|   
                     \/             \/           \/          \/         
-         {}[{}>{}] {}Hunting assets on the internet through favicon hashes
+         {}[{}>{}] {}Hunting assets on the internet using favicon hashes
          {}[{}>{}] {}By eremit4 and johnk3r                                                                                                        
         {}""".format(Style.BRIGHT, Fore.BLUE, Style.NORMAL, Fore.RED, Fore.BLUE, Fore.WHITE,
                      Fore.BLUE, Fore.RED, Fore.BLUE, Fore.WHITE, Fore.RESET))
