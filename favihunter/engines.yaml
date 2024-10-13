@@ -1,0 +1,36 @@
+censys:
+  name: Censys
+  hash: MD5
+  url: 'https://search.censys.io/search?resource=hosts&q=services.http.response.favicons.md5_hash="{}"'
+criminalip:
+  name: Criminal IP
+  hash: MMH3-HEX
+  url: 'https://www.criminalip.io/asset/search?query=favicon%3A+{}'
+fofa:
+  name: FOFA
+  hash: MMH3
+  url: 'https://en.fofa.info/result?qbase64={}'
+netlas:
+  name: Netlas
+  hash: SHA256
+  url: 'https://app.netlas.io/responses/?q=http.favicon.hash_sha256%3A{}'
+odin:
+  name: ODIN
+  hash: MD5
+  url: 'https://search.odin.io/hosts?query=services.modules.http.favicon.md5_hash%3A%22{}%22'
+shodan:
+  name: Shodan
+  hash: MMH3
+  url: 'https://www.shodan.io/search?query=http.favicon.hash%3A%22{}%22'
+silent:
+  name: Silent Push
+  hash: MMH3
+  url: 'https://explore.silentpush.com/web-scanner?query=favicon2_murmur3%20%3D%20{}&sorting=scan_date%2Fdesc'
+validin:
+  name: Validin
+  hash: MD5
+  url: 'https://app.validin.com/detail?type=hash&find={}#tab=host_responses_v2'
+zoomeye:
+  name: Zoomeye
+  hash: MMH3
+  url: 'https://www.zoomeye.org/searchResult?q=iconhash%3A%22{}%22'
