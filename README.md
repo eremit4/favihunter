@@ -10,6 +10,18 @@ Cloning the project:
 ```bash
 git clone https://github.com/eremit4/favihunter.git
 ```
+
+### Using [uv](https://github.com/astral-sh/uv)
+
+Enter the project folder, creates a virtual env, install dependencies and activate
+virtual env:
+
+```bash
+cd favihunter && uv venv && uv sync && source .venv/bin/activate
+```
+
+### Using traditional pip
+
 Optional - Creating a virtualenv before installing the dependencies
 > Note: The use of virtual environments is optional, but recommended. In this way, we avoid possible conflicts in different versions of the project's dependencies.
 > Learn how to install and use virtualenv according to your OS [here](https://virtualenv.pypa.io/en/latest/)
@@ -47,3 +59,17 @@ python favihunter.py --remove-favicons
 ```
 
 ![](./logo/favihunter.gif)
+
+## 🐋 Using with Docker 
+
+Build the image:
+
+```bash
+docker build -t favihunter .
+```
+
+Running the image:
+
+```bash
+docker run favihunter --help
+```
