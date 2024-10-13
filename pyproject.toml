@@ -1,0 +1,16 @@
+[project]
+name = "favihunter"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "colorama~=0.4.6",
+    "fake-useragent~=1.4.0",
+    "favicon~=0.7.0",
+    "mmh3~=4.0.1",
+    "prettytable~=3.9.0",
+    "requests~=2.32.3",
+    "tldextract~=5.1.1",
+    "validators~=0.22.0",
+]
