@@ -1,7 +1,7 @@
 [project]
 name = "favihunter"
 version = "0.1.0"
-description = "Add your description here"
+description = "Favihunter is a tool to find sites using a given favicon using different search engines."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
