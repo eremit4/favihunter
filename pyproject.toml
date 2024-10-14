@@ -1,10 +1,12 @@
 [tool.poetry]
 name = "favihunter"
-version = "1.0.0"
+version = "1.0.1"
 description = "Discover and track internet assets using favicon hashes through search engines."
 authors = ["eremit4 <eremit4@protonmail.com>"]
 license = "MIT"
 readme = "README.md"
+repository = "https://github.com/eremit4/favihunter"
+homepage = "https://github.com/eremit4/favihunter"
 
 [tool.poetry.dependencies]
 python = "^3.8"
