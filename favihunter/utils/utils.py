@@ -1,8 +1,10 @@
 from io import BytesIO
 from PIL import Image
 from os import listdir, remove
-from colorama import Fore
+from colorama import Fore, Style
 from contextlib import closing
+from requests import get
+from requests.exceptions import RequestException
 from urllib.parse import urlparse, urlencode
 from urllib.request import urlopen
 from hashlib import md5, sha256
@@ -36,14 +38,23 @@ def get_parsed_arguments() -> ArgumentParser:
 
 def get_project_version() -> None:
     """
-    Get the project version defined in pyproject.toml
-    :return: The project version.
+    Get the project version defined in pyproject.toml and compare with PyPI version
+    :return: None
     """
     try:
-        version_ = version("favihunter")
+        current_version = version("favihunter")
+        response = get(url="https://pypi.org/pypi/favihunter/json", timeout=10)
+        response.raise_for_status()
+        latest_version = response.json()["info"]["version"]
+        if latest_version > current_version:
+            print(f"[{Fore.BLUE}INF{Fore.RESET}] Current version: {current_version} ({Fore.LIGHTRED_EX}{Style.BRIGHT}outdated{Fore.RESET}{Style.NORMAL})")
+            print(f"[{Fore.LIGHTYELLOW_EX}WRN{Fore.RESET}] Please update the project by running {Fore.LIGHTRED_EX}{Style.BRIGHT}pip install --upgrade favihunter{Fore.RESET}{Style.NORMAL}")
+        else:
+            print(f"[{Fore.BLUE}INF{Fore.RESET}] Current version: {current_version} ({Fore.LIGHTGREEN_EX}{Style.BRIGHT}latest{Fore.RESET}{Style.NORMAL})")
     except PackageNotFoundError:
-        version_ = "Not found"
-    print(f"[{Fore.BLUE}INF{Fore.RESET}] Current favihunter version: {Fore.LIGHTRED_EX}{version_}{Fore.RESET}")
+        print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Unable to get current project version")
+    except RequestException as e:
+        print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Unable to check possible updates: {e}")
 
 
 def is_valid_url(url: str) -> bool:

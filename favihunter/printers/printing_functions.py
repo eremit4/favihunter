@@ -9,16 +9,16 @@ def presentation() -> None:
     Function that invokes the project presentation.
     :return: None
     """
-    print(r"""{}
+    print(r"""{}{}
 
-          _____            .__.__                  __                
-        _/ ____\____ ___  _|__|  |__  __ __  _____/  |_  ___________ 
-        \   __\\__  \\  \/ /  |  |  \|  |  \/    \   __\/ __ \_  __ \
-         |  |   / __ \\   /|  |   Y  \  |  /   |  \  | \  ___/|  | \/
-         |__|  (____  /\_/ |__|___|  /____/|___|  /__|  \___  >__|   
-                    \/             \/           \/          \/         
-                                    <by {}eremit4{} and {}johnk3r{}>                                                                                                        
-        {}""".format(Style.BRIGHT, Fore.LIGHTRED_EX, Fore.RESET, Fore.BLUE, Fore.RESET, Style.NORMAL))
+      _____             __ __                  __                
+    _/ ____\____ ___  _|__|  |__  __ __  _____/  |_  ___________ 
+    \   __\\__  \\  \/ /  |  |  \|  |  \/    \   __\/ __ \_  __ \
+     |  |   / __ \\   /|  |   Y  \  |  /   |  \  | \  ___/|  | \/
+     |__|  (____  /\_/ |__|___|  /____/|___|  /__|  \___  >__|   
+                \/             \/           \/          \/
+
+    {}""".format(Style.BRIGHT, Fore.LIGHTWHITE_EX, Style.NORMAL))
 
 
 def print_hashes(hashes: dict) -> None:
@@ -30,7 +30,7 @@ def print_hashes(hashes: dict) -> None:
     for hash_name, hash_value in hashes.items():
         if hash_name == "favicon":
             continue
-        print(f"\t[{Fore.CYAN}{hash_name}{Fore.RESET}] {hash_value}")
+        print(f"\t[{Fore.BLUE}{Style.BRIGHT}{hash_name}{Style.NORMAL}{Fore.RESET}] {hash_value}")
 
 
 def print_results(favicon_hashes_dict: dict) -> None:
@@ -51,4 +51,4 @@ def print_results(favicon_hashes_dict: dict) -> None:
                 url = engine_info["url"].format(query)
             else:
                 url = engine_info["url"].format(favicon_hashes_dict[hash_key])
-            print(f"\t[{Fore.LIGHTRED_EX}{name}{Fore.RESET}][{Fore.CYAN}{hash_key}{Fore.RESET}] {make_url_tiny(url=url)}")
+            print(f"\t[{Fore.LIGHTGREEN_EX}{Style.BRIGHT}{name}{Style.NORMAL}{Fore.RESET}][{Fore.BLUE}{Style.BRIGHT}{hash_key}{Style.NORMAL}{Fore.RESET}] {make_url_tiny(url=url)}")

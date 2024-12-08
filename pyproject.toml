@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "favihunter"
-version = "1.0.1"
+version = "1.1.0"
 description = "Discover and track internet assets using favicon hashes through search engines."
 authors = ["eremit4 <eremit4@protonmail.com>"]
 license = "MIT"

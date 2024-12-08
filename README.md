@@ -3,9 +3,11 @@
 > Favicons are small icons in modern web applications that could be very useful for us in our day-to-day hunting activities, especially when we combine these icons with modern search engines to find assets on the internet.
 
 > This project helps security professionals find assets online using favicon hashes through search engines such as:
+- [BinaryEdge](https://app.binaryedge.io/services/query)
 - [Censys](https://search.censys.io/)
 - [Criminal IP](https://www.criminalip.io/) 
 - [FOFA](https://en.fofa.info/)
+- [Hunter-How](https://hunter.how/)
 - [Netlas](https://app.netlas.io)
 - [Odin](https://search.odin.io/)
 - [Shodan](https://www.shodan.io) 

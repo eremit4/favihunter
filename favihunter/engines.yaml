@@ -1,3 +1,7 @@
+binaryedge:
+  name: Binary Edge
+  hash: MD5
+  url: 'https://app.binaryedge.io/services/query?query=web.favicon.md5:{}'
 censys:
   name: Censys
   hash: MD5
@@ -10,6 +14,10 @@ fofa:
   name: FOFA
   hash: MMH3
   url: 'https://en.fofa.info/result?qbase64={}'
+hunterhow:
+  name: Hunter-How
+  hash: MD5
+  url: 'https://hunter.how/list?searchValue=favicon_hash%253D%22{}%22'
 netlas:
   name: Netlas
   hash: SHA256
