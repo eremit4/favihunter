@@ -48,4 +48,4 @@ def main() -> None:
     except KeyboardInterrupt:
         print(f"\n[{Fore.BLUE}INF{Fore.RESET}] Program manually stopped")
     except Exception as error_:
-        print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] An error occurred and forced the program to stop: {error_}")
+        print(f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] An error occurred and forced the program to stop: {error_}")

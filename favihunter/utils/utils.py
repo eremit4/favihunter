@@ -2,11 +2,10 @@ from io import BytesIO
 from PIL import Image
 from os import listdir, remove
 from colorama import Fore, Style
-from contextlib import closing
+from fake_useragent import UserAgent
 from requests import get
 from requests.exceptions import RequestException
 from urllib.parse import urlparse, urlencode
-from urllib.request import urlopen
 from hashlib import md5, sha256
 from mmh3 import hash as mmh3_calc
 from base64 import b64encode, encodebytes
@@ -52,9 +51,9 @@ def get_project_version() -> None:
         else:
             print(f"[{Fore.BLUE}INF{Fore.RESET}] Current version: {current_version} ({Fore.LIGHTGREEN_EX}{Style.BRIGHT}latest{Fore.RESET}{Style.NORMAL})")
     except PackageNotFoundError:
-        print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Unable to get current project version")
+        print(f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] Unable to get current project version")
     except RequestException as e:
-        print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Unable to check possible updates: {e}")
+        print(f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] Unable to check possible updates: {e}")
 
 
 def is_valid_url(url: str) -> bool:
@@ -69,13 +68,18 @@ def is_valid_url(url: str) -> bool:
 
 def make_url_tiny(url: str) -> str:
     """
-    Converts a long URL into a tiny URL
+    Converts a long URL into a tiny URL using the is.gd API with a custom User-Agent.
     :param url: URL to be transformed
     :return: Shortened URL
     """
-    request_url = f"http://tinyurl.com/api-create.php?{urlencode({'url':url})}"
-    with closing(urlopen(request_url)) as response:
-        return response.read().decode("utf-8")
+    request_url = f"https://is.gd/create.php?{urlencode({'format': 'simple', 'url': url})}"
+    try:
+        response = get(request_url, headers={"User-Agent": UserAgent().random})
+        response.raise_for_status()  # Raise an exception for HTTP errors
+        return response.text
+    except RequestException as e:
+        print(f"{Fore.LIGHTRED_EX}ERR{Fore.RESET}] Error creating tiny URL: {e}")
+        exit(1)
 
 
 def is_valid_image(favicon_content: bytes, favicon_path: str) -> bool:

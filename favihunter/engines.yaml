@@ -37,7 +37,7 @@ silent:
 validin:
   name: Validin
   hash: MD5
-  url: 'https://app.validin.com/detail?type=hash&find={}#tab=host_responses_v2'
+  url: 'https://app.validin.com/detail?type=hash&find={}#tab=host_responses'
 zoomeye:
   name: Zoomeye
   hash: MMH3

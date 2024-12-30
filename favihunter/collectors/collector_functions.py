@@ -33,14 +33,14 @@ def get_favicon_from_url(url: str) -> dict:
         possible_favicons = get_favicon(url=url, headers=header, timeout=2)
         favicon = select_favicon(possible_favicons)
         if not favicon:
-            print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] No valid favicon found for {url}")
+            print(f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] No valid favicon found for {url}")
             return {}
 
         print(f"[{Fore.BLUE}INF{Fore.RESET}] Favicon {favicon.url} downloaded in /tmp")
 
         with get(url=favicon.url, headers=header, stream=True) as response:
             if response.status_code != 200:
-                print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Unable to save favicon from url {favicon.url}: {response.text}")
+                print(f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] Unable to save favicon from url {favicon.url}: {response.text}")
                 return {}
 
             mmh3_value = calculate_mmh3_hash(data=response.content)
@@ -51,7 +51,7 @@ def get_favicon_from_url(url: str) -> dict:
             favicon_path = save_favicon(favicon_content=response.content, domain=domain, ext=favicon.format)
             if not is_valid_image(favicon_content=response.content, favicon_path=favicon_path):
                 print(
-                    f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] The downloaded favicon was not a valid image and has been removed")
+                    f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] The downloaded favicon was not a valid image and has been removed")
                 return {}
 
             print(f"[{Fore.BLUE}INF{Fore.RESET}] Extracting hashes")
@@ -60,9 +60,9 @@ def get_favicon_from_url(url: str) -> dict:
             return results
 
     except RequestException as req_error:
-        print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Request error occurred: {req_error}")
+        print(f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] Request error occurred: {req_error}")
     except Exception as error_get_favicon:
-        print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] An error occurred: {error_get_favicon}")
+        print(f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] An error occurred: {error_get_favicon}")
 
     return {}
 
@@ -107,7 +107,7 @@ def process_url(url: str) -> None:
         if favicon_dict:
             print_results(favicon_hashes_dict=favicon_dict)
     else:
-        print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Url {url} is invalid")
+        print(f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] Url {url} is invalid")
 
 
 def process_urls_file(file_path: str) -> None:
@@ -123,8 +123,8 @@ def process_urls_file(file_path: str) -> None:
                     if url.strip():
                         process_url(url.strip())
         else:
-            print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] The file path {file_path} is invalid")
+            print(f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] The file path {file_path} is invalid")
     except FileNotFoundError:
-        print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] File not found: {file_path}")
+        print(f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] File not found: {file_path}")
     except PermissionError:
-        print(f"[{Fore.LIGHTRED_EX}ERROR{Fore.RESET}] Permission denied: {file_path}")
+        print(f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] Permission denied: {file_path}")
