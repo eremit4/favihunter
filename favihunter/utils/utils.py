@@ -19,18 +19,24 @@ def get_parsed_arguments() -> ArgumentParser:
     :return: The argument parser object.
     """
     arg_style = lambda prog: HelpFormatter(prog, max_help_position=50, width=100)
-    args = ArgumentParser(description="Discover and track internet assets using favicon hashes through search engines.", add_help=False, formatter_class=arg_style)
-    group_required = args.add_argument_group(title="Options")
-    group_required.add_argument("-u", "--url", metavar="<address>", type=str, dest="url", required=False,
-                                help="Receives a URL, collects the favicon, and returns the hashes and the search engine results.")
-    group_required.add_argument("-uf", "--urls", metavar="<file path>", type=str, dest="urls", required=False,
-                                help="Receives a file path storing URLs, collects the favicons, and returns the hashes and the search engine results.")
-    group_required.add_argument("-f", "--favicon", metavar="<favicon path>", type=str, dest="favicon", required=False,
-                                help="Receives the local file path of the favicon and returns the hashes and search engine results.")
-    group_required.add_argument("-r", "--remove-favicons", action="store_true", dest="remove_favicons", required=False,
-                                help="Clean the local favicon directory.")
-    group_required = args.add_argument_group(title="Help")
-    group_required.add_argument("-h", "--help", action="help", help="Show this help screen.")
+    args = ArgumentParser(description="Discover and track internet assets using favicon hashes through search engines.",
+                          add_help=False, formatter_class=arg_style)
+    group_favicon = args.add_argument_group(title="Favicon Options")
+    group_favicon.add_argument("-u", "--url", metavar="<address>", type=str, dest="url", required=False,
+                                help="Receives a URL, collects the favicon, and returns the hashes and search engine results.")
+    group_favicon.add_argument("-uf", "--urls", metavar="<file path>", type=str, dest="urls", required=False,
+                                help="Receives a file path with URLs, collects the favicons, and returns the hashes and search engine results.")
+    group_favicon.add_argument("-f", "--favicon", metavar="<favicon path>", type=str, dest="favicon", required=False,
+                                help="Receives the local file path of a favicon and returns the hashes and search engine results.")
+    group_favicon.add_argument("-r", "--remove", action="store_true", dest="remove", required=False,
+                                help="Cleans the favihunter/tmp/ directory.")
+    group_vt = args.add_argument_group(title="Virus Total Integration")
+    group_vt.add_argument("-va", "--vt-api-key", action="store_true", dest="vt_key", required=False,
+                                help="Saves the VirusTotal API key locally for future use. Use this flag only once per API key.")
+    group_vt.add_argument("-vt", "--virus-total", action="store_true", dest="vt", required=False,
+                                help="Sends the favicon to VirusTotal to retrieve intelligence about it. (Requires API key)")
+    group_help = args.add_argument_group(title="Help")
+    group_help.add_argument("-h", "--help", action="help", help="Displays this help screen.")
 
     return args
 
@@ -104,9 +110,9 @@ def clean_tmp_dir() -> None:
     Clean the /tmp directory
     :return:  None
     """
-    print(f"[{Fore.BLUE}INF{Fore.RESET}] Preparing to clean the local favicon directory")
+    print(f"[{Fore.BLUE}INF{Fore.RESET}] Preparing to clean favihunter/tmp directory")
     if len(listdir(path="./tmp")) == 0:
-        print(f"[{Fore.BLUE}INF{Fore.RESET}] The directory is empty")
+        print(f"[{Fore.BLUE}INF{Fore.RESET}] Directory already empty")
     for favicon_item in listdir(path="./tmp"):
         remove(path=f"./tmp/{favicon_item}")
         print(f"\t[{Fore.BLUE}INF{Fore.RESET}] {favicon_item} removed")

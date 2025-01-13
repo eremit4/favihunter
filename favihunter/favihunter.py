@@ -2,6 +2,7 @@ from os.path import isfile
 from colorama import init, Fore
 from favihunter.collectors.collector_functions import process_url, process_urls_file
 from favihunter.printers.printing_functions import print_hashes, print_results, presentation
+from favihunter.virustotal.vt import add_vt_api_key, vt_favicon_operation
 from favihunter.utils.utils import calculate_hashes, calculate_mmh3_hash, clean_tmp_dir, get_parsed_arguments, get_project_version
 
 
@@ -18,8 +19,14 @@ def main() -> None:
         # defining the argparse object
         args = get_parsed_arguments()
         parser = args.parse_args()
-        if parser.remove_favicons:
+        if parser.remove:
             clean_tmp_dir()
+
+        elif parser.vt_key:
+            add_vt_api_key(api_key=parser.vt_key)
+
+        elif parser.url and parser.vt:
+            vt_favicon_operation(url=parser.url)
 
         elif parser.url:
             process_url(url=parser.url)

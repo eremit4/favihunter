@@ -13,6 +13,7 @@
 - [Shodan](https://www.shodan.io) 
 - [Silent Push](https://explore.silentpush.com) 
 - [Validin](https://app.validin.com)
+- [VirusTotal](https://virustotal.com)
 - [Zoomeye](https://www.zoomeye.hk)
 
 ## 🛠️  Installation
@@ -63,9 +64,15 @@ Analyzing a local favicon image:
 favihunter --favicon <file path>
 ```
 
-Cleaning the favicon local directory:
+Cleaning favihunter/tmp/ local directory:
 ```bash
-favihunter --remove-favicons
+favihunter --remove
 ```
-
 ![](logo/favihunter.gif)
+
+Pivoting with VirusTotal integration:
+```bash
+favihunter --url <url> --virus-total
+```
+![](logo/favihunter_vt.gif)
+
