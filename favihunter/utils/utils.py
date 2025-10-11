@@ -2,10 +2,9 @@ from io import BytesIO
 from PIL import Image
 from os import listdir, remove
 from colorama import Fore, Style
-from fake_useragent import UserAgent
 from requests import get
 from requests.exceptions import RequestException
-from urllib.parse import urlparse, urlencode
+from urllib.parse import urlparse
 from hashlib import md5, sha256
 from mmh3 import hash as mmh3_calc
 from base64 import b64encode, encodebytes
@@ -74,15 +73,25 @@ def is_valid_url(url: str) -> bool:
 
 def make_url_tiny(url: str) -> str:
     """
-    Converts a long URL into a tiny URL using the is.gd API with a custom User-Agent.
+    Converts a long URL into a tiny URL using the TinyURL public endpoint.
     :param url: URL to be transformed
     :return: Shortened URL
     """
-    request_url = f"https://is.gd/create.php?{urlencode({'format': 'simple', 'url': url})}"
     try:
-        response = get(request_url, headers={"User-Agent": UserAgent().random})
-        response.raise_for_status()  # Raise an exception for HTTP errors
-        return response.text
+        resp = get(
+            url="https://da.gd/s",
+            params={"url": url},
+            headers={
+                "User-Agent": ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                               "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+            },
+            timeout=6,
+        )
+        resp.raise_for_status()
+        short = resp.text.strip()
+        if not short.startswith("http"):
+            raise RequestException(f"DA shorter returned: {short}")
+        return short
     except RequestException as e:
         print(f"{Fore.LIGHTRED_EX}ERR{Fore.RESET}] Error creating tiny URL: {e}")
         exit(1)
@@ -128,17 +137,19 @@ def calculate_hashes(favicon_path: str, favicon: str, mmh3_value: int) -> dict:
     """
     with open(file=favicon_path, mode="rb") as fp:
         content = fp.read()
-        new_favicon_md5 = md5()
-        new_favicon_sha256 = sha256()
-        new_favicon_md5.update(content)
-        new_favicon_sha256.update(content)
-        return {
-            "favicon": favicon,
-            "MMH3": mmh3_value,
-            "MMH3-HEX": str(hex(mmh3_value)).split("x")[1],
-            "MD5": new_favicon_md5.hexdigest(),
-            "SHA256": new_favicon_sha256.hexdigest()
-        }
+
+    new_favicon_md5 = md5()
+    new_favicon_sha256 = sha256()
+    new_favicon_md5.update(content)
+    new_favicon_sha256.update(content)
+
+    return {
+        "favicon": favicon,
+        "MMH3": mmh3_value,
+        "MMH3-HEX": str(hex(mmh3_value)).split("x")[1],
+        "MD5": new_favicon_md5.hexdigest(),
+        "SHA256": new_favicon_sha256.hexdigest(),
+    }
 
 
 def calculate_mmh3_hash(data: bytes) -> int:

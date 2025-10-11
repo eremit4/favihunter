@@ -1,44 +1,43 @@
-binaryedge:
-  name: Binary Edge
-  hash: MD5
-  url: 'https://app.binaryedge.io/services/query?query=web.favicon.md5:{}'
+VT:
+  key:
+  name: VirusTotal
 censys:
+  hash: MD5
   name: Censys
-  hash: MD5
-  url: 'https://search.censys.io/search?resource=hosts&q=services.http.response.favicons.md5_hash="{}"'
+  url: https://search.censys.io/search?resource=hosts&q=services.http.response.favicons.md5_hash="{}"
 criminalip:
-  name: Criminal IP
   hash: MMH3-HEX
-  url: 'https://www.criminalip.io/asset/search?query=favicon%3A+{}'
+  name: Criminal IP
+  url: https://www.criminalip.io/asset/search?query=favicon%3A+{}
 fofa:
+  hash: MMH3
   name: FOFA
-  hash: MMH3
-  url: 'https://en.fofa.info/result?qbase64={}'
+  url: https://en.fofa.info/result?qbase64={}
 hunterhow:
+  hash: MD5
   name: Hunter-How
-  hash: MD5
-  url: 'https://hunter.how/list?searchValue=favicon_hash%253D%22{}%22'
+  url: https://hunter.how/list?searchValue=favicon_hash%3D%22{}%22
 netlas:
-  name: Netlas
   hash: SHA256
-  url: 'https://app.netlas.io/responses/?q=http.favicon.hash_sha256%3A{}'
+  name: Netlas
+  url: https://app.netlas.io/responses/?q=http.favicon.hash_sha256%3A{}
 odin:
+  hash: MD5
   name: ODIN
-  hash: MD5
-  url: 'https://search.odin.io/hosts?query=services.modules.http.favicon.md5_hash%3A%22{}%22'
+  url: https://search.odin.io/hosts?query=services.modules.http.favicon.md5_hash%3A%22{}%22
 shodan:
+  hash: MMH3
   name: Shodan
-  hash: MMH3
-  url: 'https://www.shodan.io/search?query=http.favicon.hash%3A%22{}%22'
+  url: https://www.shodan.io/search?query=http.favicon.hash%3A{}
 silent:
+  hash: MMH3
   name: Silent Push
-  hash: MMH3
-  url: 'https://explore.silentpush.com/web-scanner?query=favicon2_murmur3%20%3D%20{}&sorting=scan_date%2Fdesc'
+  url: https://explore.silentpush.com/web-scanner?query=favicon2_murmur3%20%3D%20{}&sorting=scan_date%2Fdesc
 validin:
-  name: Validin
   hash: MD5
-  url: 'https://app.validin.com/detail?type=hash&find={}#tab=host_responses'
+  name: Validin
+  url: https://app.validin.com/detail?find={}
 zoomeye:
-  name: Zoomeye
   hash: MMH3
-  url: 'https://www.zoomeye.org/searchResult?q=iconhash%3A%22{}%22'
+  name: Zoomeye
+  url: https://www.zoomeye.org/searchResult?q=iconhash%3A%22{}%22

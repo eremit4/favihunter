@@ -1,9 +1,9 @@
 # Favihunter
 
-> Favicons are small icons in modern web applications that could be very useful for us in our day-to-day hunting activities, especially when we combine these icons with modern search engines to find assets on the internet.
+> Favicons are tiny icons used by modern web applications. When combined with search engines, they’re great pivots for discovering related internet assets.
 
-> This project helps security professionals find assets online using favicon hashes through search engines such as:
-- [BinaryEdge](https://app.binaryedge.io/services/query)
+This tool helps security practitioners find assets using favicon hashes across multiple search engines:
+
 - [Censys](https://search.censys.io/)
 - [Criminal IP](https://www.criminalip.io/) 
 - [FOFA](https://en.fofa.info/)
@@ -14,65 +14,109 @@
 - [Silent Push](https://explore.silentpush.com) 
 - [Validin](https://app.validin.com)
 - [VirusTotal](https://virustotal.com)
-- [Zoomeye](https://www.zoomeye.hk)
+- [Zoomeye](https://www.zoomeye.ai)
 
-## 🛠️  Installation
+## 🛠️ Installation
 
-Optional - Creating a virtualenv before installing the dependencies
-> Note: The use of virtual environments is optional, but recommended. In this way, we avoid possible conflicts in different versions of the project's dependencies.
-> Learn how to install and use virtualenv according to your OS [here](https://virtualenv.pypa.io/en/latest/)
-
-### Via PyPI (Recommended)
-
-You can install FaviHunter directly from [PyPI](https://pypi.org/project/favihunter/):
+### Option A — PyPI (standard)
 
 ```bash
 pip install favihunter
 ```
 
-### Via Source (Using Poetry)
+### Option B — pipx (isolated CLI install) — **recommended for command-line tools**
 
-Cloning the project:
 ```bash
-git clone https://github.com/eremit4/favihunter.git
+# install pipx if you don’t have it
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath  # then restart your shell
+
+# install favihunter
+pipx install favihunter
+
+# upgrade later
+pipx upgrade favihunter
+
+# run without installing (one-shot)
+pipx run favihunter --help
 ```
 
-Installing the dependencies:
+### Option C — From source (Poetry)
+
 ```bash
+git clone https://github.com/eremit4/favihunter.git
+cd favihunter
 poetry install
 ```
 
-## 🕵️‍♂️ Using
+> Using a virtual environment is recommended to avoid dependency conflicts.
 
-Discovering the project capabilities:
+## ⚡ Quickstart
+
+```bash
+favihunter --url https://python.org
+```
+
+Favihunter downloads the favicon, computes hashes (MMH3, MD5, SHA256, and optional perceptual hash), and prints ready-to-click search URLs.
+
+## 🕵️‍♂️ Usage
+
 ```bash
 favihunter --help
 ```
 
-Analyzing a specific URL:
-```bash
-favihunter --url <url address>
-```
+Analyze a single URL:
 
-Analyzing a file with URLs:
 ```bash
-favihunter --urls <file path>
-```
-
-Analyzing a local favicon image:
-```bash
-favihunter --favicon <file path>
-```
-
-Cleaning favihunter/tmp/ local directory:
-```bash
-favihunter --remove
+favihunter --url <url>
 ```
 ![](logo/favihunter.gif)
 
-Pivoting with VirusTotal integration:
+Analyze a file with URLs (one per line):
+
+```bash
+favihunter --urls <file>
+```
+
+Analyze a local favicon file:
+
+```bash
+favihunter --favicon <path/to/favicon.ico>
+```
+
+Clean the temp folder:
+
+```bash
+favihunter --remove
+```
+
+VirusTotal pivot:
+
 ```bash
 favihunter --url <url> --virus-total
 ```
 ![](logo/favihunter_vt.gif)
+
+
+> ## ✅ Requirements
+
+* Python **3.8+**
+* Linux/macOS (Windows is likely fine via PowerShell; please open an issue if you hit problems)
+
+## 🧹 Uninstall / Upgrade
+
+**pip**
+
+```bash
+pip install --upgrade favihunter
+pip uninstall favihunter
+```
+
+**pipx**
+
+```bash
+pipx upgrade favihunter
+pipx uninstall favihunter
+```
+
 

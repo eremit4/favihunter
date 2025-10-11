@@ -5,11 +5,57 @@ from colorama import Fore
 from requests import get
 from requests.exceptions import RequestException
 from urllib.parse import urlparse
-from fake_useragent import UserAgent
 from favicon import get as get_favicon
 from favihunter.printers.printing_functions import print_hashes, print_results
 from favihunter.utils.utils import is_valid_image, is_valid_url, calculate_hashes, calculate_mmh3_hash
 
+
+
+def default_header() -> dict:
+    """
+    Defines a request header to use during the process
+    :return: a dict with the header to be used
+    """
+    return {
+    "User-Agent": ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                   "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"),
+    "Accept": "*/*",
+    "Accept-Language": "pt-BR,pt;q=0.8,en-US;q=0.5,en;q=0.3",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Cache-Control": "no-cache",
+    "Pragma": "no-cache",
+}
+
+
+def resolve_favicon_url(url: str) -> Optional[str]:
+    """
+    Prefer the site's /favicon.ico (same target Netlas indexes).
+    Falls back to 'favicon' lib discovery only if /favicon.ico is not an image.
+    :param url: site URL (e.g., https://www.python.org/)
+    :return: absolute favicon URL or None
+    """
+    parsed = urlparse(url)
+    origin = f"{parsed.scheme}://{parsed.netloc}"
+    ico_url = f"{origin}/favicon.ico"
+
+    try:
+        r = get(ico_url, headers=default_header(), timeout=8, stream=True)
+        ctype = (r.headers.get("content-type") or "").lower()
+        if r.ok and ("image" in ctype or "octet-stream" in ctype):
+            return ico_url
+    except RequestException:
+        pass
+
+    # fallback: using 'favicon' lib
+    try:
+        favs = get_favicon(url=url, headers=default_header(), timeout=8)
+        for f in favs:
+            if f.url.lower().endswith(".ico"):
+                return f.url
+        return favs[0].url if favs else None
+    except Exception:
+        return None
 
 def get_favicon_from_url(url: str) -> dict:
     """
@@ -17,45 +63,35 @@ def get_favicon_from_url(url: str) -> dict:
     :param url: URL address
     :return: a dict with the hashes
     """
-    header = {
-        "User-Agent": UserAgent().random,
-        "Accept": "*/*",
-        "Accept-Language": "pt-BR,pt;q=0.8,en-US;q=0.5,en;q=0.3",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
-        "Cache-Control": "no-cache",
-        "Pragma": "no-cache"
-    }
-
-    parsed_url = urlparse(url)
-    domain = parsed_url.netloc
+    domain = urlparse(url).netloc
     try:
-        possible_favicons = get_favicon(url=url, headers=header, timeout=2)
-        favicon = select_favicon(possible_favicons)
-        if not favicon:
+        fav_url = resolve_favicon_url(url)
+        if not fav_url:
             print(f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] No valid favicon found for {url}")
             return {}
 
-        print(f"[{Fore.BLUE}INF{Fore.RESET}] Favicon {favicon.url} downloaded in /tmp")
-
-        with get(url=favicon.url, headers=header, stream=True) as response:
+        with get(url=fav_url, headers=default_header(), timeout=10, stream=True) as response:
             if response.status_code != 200:
-                print(f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] Unable to save favicon from url {favicon.url}: {response.text}")
+                print(f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] Unable to save favicon from url {fav_url}: {response.text}")
                 return {}
 
-            mmh3_value = calculate_mmh3_hash(data=response.content)
+            content = response.content
+            print(f"[{Fore.BLUE}INF{Fore.RESET}] Favicon {fav_url} downloaded in /tmp")
+
+            mmh3_value = calculate_mmh3_hash(data=content)
 
             if not isdir("./tmp"):
                 mkdir(path="./tmp")
 
-            favicon_path = save_favicon(favicon_content=response.content, domain=domain, ext=favicon.format)
-            if not is_valid_image(favicon_content=response.content, favicon_path=favicon_path):
-                print(
-                    f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] The downloaded favicon was not a valid image and has been removed")
+            ext = "ico" if fav_url.lower().endswith(".ico") else "png"
+            favicon_path = save_favicon(favicon_content=content, domain=domain, ext=ext)
+
+            if not is_valid_image(favicon_content=content, favicon_path=favicon_path):
+                print(f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] The downloaded favicon was not a valid image and has been removed")
                 return {}
 
             print(f"[{Fore.BLUE}INF{Fore.RESET}] Extracting hashes")
-            results = calculate_hashes(favicon_path, favicon.url, mmh3_value)
+            results = calculate_hashes(favicon_path, fav_url, mmh3_value)
             print_hashes(hashes=results)
             return results
 
@@ -65,6 +101,7 @@ def get_favicon_from_url(url: str) -> dict:
         print(f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] An error occurred: {error_get_favicon}")
 
     return {}
+
 
 
 def select_favicon(favicons: List[object]) -> Optional[object]:
