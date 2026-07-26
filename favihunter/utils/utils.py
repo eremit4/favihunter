@@ -1,5 +1,3 @@
-from io import BytesIO
-from PIL import Image
 from os import listdir, remove
 from colorama import Fore, Style
 from requests import get
@@ -10,6 +8,7 @@ from mmh3 import hash as mmh3_calc
 from base64 import b64encode, encodebytes
 from argparse import ArgumentParser, HelpFormatter
 from importlib.metadata import version, PackageNotFoundError
+from packaging.version import parse as parse_version
 
 
 def get_parsed_arguments() -> ArgumentParser:
@@ -50,7 +49,7 @@ def get_project_version() -> None:
         response = get(url="https://pypi.org/pypi/favihunter/json", timeout=10)
         response.raise_for_status()
         latest_version = response.json()["info"]["version"]
-        if latest_version > current_version:
+        if parse_version(latest_version) > parse_version(current_version):
             print(f"[{Fore.BLUE}INF{Fore.RESET}] Current version: {current_version} ({Fore.LIGHTRED_EX}{Style.BRIGHT}outdated{Fore.RESET}{Style.NORMAL})")
             print(f"[{Fore.LIGHTYELLOW_EX}WRN{Fore.RESET}] Please update the project by running {Fore.LIGHTRED_EX}{Style.BRIGHT}pip install --upgrade favihunter{Fore.RESET}{Style.NORMAL}")
         else:
@@ -74,8 +73,10 @@ def is_valid_url(url: str) -> bool:
 def make_url_tiny(url: str) -> str:
     """
     Converts a long URL into a tiny URL using the TinyURL public endpoint.
+    Falls back to the original (long) URL if the shortener is unavailable, so a
+    single failed request doesn't abort the whole results listing.
     :param url: URL to be transformed
-    :return: Shortened URL
+    :return: Shortened URL, or the original URL if shortening fails
     """
     try:
         resp = get(
@@ -93,8 +94,23 @@ def make_url_tiny(url: str) -> str:
             raise RequestException(f"DA shorter returned: {short}")
         return short
     except RequestException as e:
-        print(f"{Fore.LIGHTRED_EX}ERR{Fore.RESET}] Error creating tiny URL: {e}")
-        exit(1)
+        print(f"[{Fore.LIGHTYELLOW_EX}WRN{Fore.RESET}] Error creating tiny URL, using the original URL instead: {e}")
+        return url
+
+
+# Magic bytes (file signatures) for the raster formats favicons commonly use.
+# The signature is enough to reject junk (e.g. an HTML error page returned
+# instead of a real favicon) without needing a full image-decoding dependency:
+# search engines (FOFA/Shodan/Censys) hash the raw bytes regardless of whether
+# the image itself is fully decodable.
+_IMAGE_SIGNATURES = (
+    b"\x00\x00\x01\x00",  # ICO
+    b"\x89PNG\r\n\x1a\n",  # PNG
+    b"GIF87a",             # GIF
+    b"GIF89a",             # GIF
+    b"\xff\xd8\xff",       # JPEG
+    b"BM",                 # BMP
+)
 
 
 def is_valid_image(favicon_content: bytes, favicon_path: str) -> bool:
@@ -105,13 +121,25 @@ def is_valid_image(favicon_content: bytes, favicon_path: str) -> bool:
     :return: True if the image is valid and False if not
     """
     print(f"[{Fore.BLUE}INF{Fore.RESET}] Checking if the favicon downloaded is a valid image")
-    try:
-        img = Image.open(BytesIO(favicon_content))
-        img.verify()
+
+    if is_svg_content(favicon_content=favicon_content):
         return True
-    except Exception:
-        remove(path=favicon_path)
-        return False
+
+    if favicon_content.startswith(_IMAGE_SIGNATURES):
+        return True
+
+    remove(path=favicon_path)
+    return False
+
+
+def is_svg_content(favicon_content: bytes) -> bool:
+    """
+    Checks if the given content looks like an SVG (XML) document
+    :param favicon_content: binary content of favicon downloaded
+    :return: True if the content looks like SVG and False if not
+    """
+    header = favicon_content.lstrip()[:256].lower()
+    return header.startswith(b"<svg") or (header.startswith(b"<?xml") and b"<svg" in header)
 
 
 def clean_tmp_dir() -> None:

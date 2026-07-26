@@ -1,15 +1,18 @@
+import warnings
 from os import mkdir
 from os.path import isdir, isfile
 from typing import List, Optional
+from bs4 import XMLParsedAsHTMLWarning
 from colorama import Fore
 from requests import get
 from requests.exceptions import RequestException
 from urllib.parse import urlparse
 from favicon import get as get_favicon
 from favihunter.printers.printing_functions import print_hashes, print_results
-from favihunter.utils.utils import is_valid_image, is_valid_url, calculate_hashes, calculate_mmh3_hash
+from favihunter.utils.utils import is_valid_image, is_valid_url, is_svg_content, calculate_hashes, calculate_mmh3_hash
 
-
+warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
+_FAVICON_FILE_EXTENSIONS = (".ico", ".svg", ".png", ".gif", ".jpg", ".jpeg", ".bmp")
 
 def default_header() -> dict:
     """
@@ -37,6 +40,10 @@ def resolve_favicon_url(url: str) -> Optional[str]:
     """
     parsed = urlparse(url)
     origin = f"{parsed.scheme}://{parsed.netloc}"
+
+    if parsed.path.lower().endswith(_FAVICON_FILE_EXTENSIONS):
+        return url
+
     ico_url = f"{origin}/favicon.ico"
 
     try:
@@ -47,7 +54,6 @@ def resolve_favicon_url(url: str) -> Optional[str]:
     except RequestException:
         pass
 
-    # fallback: using 'favicon' lib
     try:
         favs = get_favicon(url=url, headers=default_header(), timeout=8)
         for f in favs:
@@ -56,6 +62,7 @@ def resolve_favicon_url(url: str) -> Optional[str]:
         return favs[0].url if favs else None
     except Exception:
         return None
+
 
 def get_favicon_from_url(url: str) -> dict:
     """
@@ -83,7 +90,12 @@ def get_favicon_from_url(url: str) -> dict:
             if not isdir("./tmp"):
                 mkdir(path="./tmp")
 
-            ext = "ico" if fav_url.lower().endswith(".ico") else "png"
+            if fav_url.lower().endswith(".ico"):
+                ext = "ico"
+            elif fav_url.lower().endswith(".svg") or is_svg_content(favicon_content=content):
+                ext = "svg"
+            else:
+                ext = "png"
             favicon_path = save_favicon(favicon_content=content, domain=domain, ext=ext)
 
             if not is_valid_image(favicon_content=content, favicon_path=favicon_path):
@@ -101,7 +113,6 @@ def get_favicon_from_url(url: str) -> dict:
         print(f"[{Fore.LIGHTRED_EX}ERR{Fore.RESET}] An error occurred: {error_get_favicon}")
 
     return {}
-
 
 
 def select_favicon(favicons: List[object]) -> Optional[object]:

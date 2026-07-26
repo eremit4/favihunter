@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "favihunter"
-version = "1.3.2"
+version = "1.4.0"
 description = "Discover and monitor internet assets using favicon hashes across search engines."
 authors = ["eremit4 <eremit4@protonmail.com>"]
 license = "MIT"
@@ -9,13 +9,13 @@ repository = "https://github.com/eremit4/favihunter"
 homepage = "https://github.com/eremit4/favihunter"
 
 [tool.poetry.dependencies]
-python = "^3.8"
-mmh3 = "4.0.1"
+python = ">=3.10,<4.0"
+mmh3 = "5.2.1"
 favicon = "0.7.0"
 colorama = "0.4.6"
-requests = "~=2.32.4"
-pillow = "10.4.0"
-PyYAML = "6.0.2"
+requests = "~=2.34.2"
+PyYAML = "6.0.3"
+packaging = ">=26.2"
 
 [tool.poetry.scripts]
 favihunter = "favihunter.favihunter:main"
