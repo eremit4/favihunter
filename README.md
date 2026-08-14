@@ -18,13 +18,13 @@ This tool helps security practitioners find assets using favicon hashes across m
 
 ## 🛠️ Installation
 
-### Option A — PyPI (standard)
+### Option A - PyPI (standard)
 
 ```bash
 pip install favihunter
 ```
 
-### Option B — pipx (isolated CLI install) — **recommended for command-line tools**
+### Option B - pipx (isolated CLI install) - **recommended for command-line tools**
 
 ```bash
 # install pipx if you don’t have it
@@ -41,7 +41,7 @@ pipx upgrade favihunter
 pipx run favihunter --help
 ```
 
-### Option C — From source (Poetry)
+### Option C - From source (Poetry)
 
 ```bash
 git clone https://github.com/eremit4/favihunter.git
@@ -100,7 +100,7 @@ favihunter --url <url> --virus-total
 
 > ## ✅ Requirements
 
-* Python **3.8+**
+* Python **3.10+**
 * Linux/macOS (Windows is likely fine via PowerShell; please open an issue if you hit problems)
 
 ## 🧹 Uninstall / Upgrade
